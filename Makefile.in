@@ -95,9 +95,14 @@ TWHICH_OBJ=     version.o twhich.o argcargv.o transcript.o llist.o code.o \
 
 LSORT_OBJ=     version.o lsort.o pathcmp.o code.o argcargv.o
 
+VERSION=	$(shell date +%Y%m%d)
+
 all : ${TARGETS}
 
-version.o : version.c
+VERSION : 
+	echo ${VERSION} > ${srcdir}/VERSION
+
+version.o : version.c VERSION config.h
 	${CC} ${CFLAGS} \
 		-DVERSION=\"`cat ${srcdir}/VERSION`\" \
 		-c ${srcdir}/version.c
@@ -107,7 +112,7 @@ transcript.o : transcript.c
 		-D_RADMIND_PATH=\"${RADMINDDIR}\" \
 		-c ${srcdir}/transcript.c
 
-daemon.o : daemon.c
+daemon.o : daemon.c config.h libsnet/snet.h command.h logname.h tls.h
 	${CC} ${CFLAGS} \
 		-D_RADMIND_AUTHLEVEL=${RADMIND_AUTHLEVEL} \
 		-D_RADMIND_PATH=\"${RADMINDDIR}\" \
@@ -115,7 +120,7 @@ daemon.o : daemon.c
 		-D_RADMIND_MAXCONNECTIONS=${RADMIND_MAXCONNECTIONS} \
 		-c ${srcdir}/daemon.c
 
-lcksum.o : lcksum.c
+lcksum.o : lcksum.c config.h pathcmp.h largefile.h progress.h root.h
 	${CC} ${CFLAGS} \
 		-D_RADMIND_PATH=\"${RADMINDDIR}\" \
 		-c ${srcdir}/lcksum.c
@@ -125,11 +130,12 @@ lmerge.o : lmerge.c
 		-D_RADMIND_PATH=\"${RADMINDDIR}\" \
 		-c ${srcdir}/lmerge.c
 
-command.o : command.c
+command.o : command.c command.h config.h libsnet/snet.h applefile.h base64.h command.h argcargv.h cksum.h code.h list.h wildcard.h largefile.h mkdirs.h connect.h
+
 	${CC} ${CFLAGS} \
 		-c ${srcdir}/command.c
 
-fsdiff.o : fsdiff.c
+fsdiff.o : fsdiff.c config.h transcript.h pathcmp.h radstat.h
 	${CC} ${CFLAGS} \
 		-D_RADMIND_COMMANDFILE=\"${COMMANDFILE}\" \
 		-c ${srcdir}/fsdiff.c
@@ -150,7 +156,7 @@ ktcheck.o : ktcheck.c
 		-D_RADMIND_COMMANDFILE=\"${COMMANDFILE}\" \
 		-c ${srcdir}/ktcheck.c
 
-lapply.o : lapply.c
+lapply.o : lapply.c config.h base64.h cksum.h connect.h argcargv.h radstat.h code.h pathcmp.h update.h tls.h largefile.h progress.h report.h
 	${CC} ${CFLAGS} \
 		-D_RADMIND_HOST=\"${RADMIND_HOST}\" \
 		-D_RADMIND_AUTHLEVEL=${RADMIND_AUTHLEVEL} \
@@ -186,7 +192,7 @@ t2pkg.o : t2pkg.c
 		-D_RADMIND_PATH=\"${RADMINDDIR}\" \
 		-c ${srcdir}/t2pkg.c
 
-twhich.o : twhich.c
+twhich.o : twhich.c config.h wildcard.h
 	${CC} ${CFLAGS} \
 		-D_RADMIND_COMMANDFILE=\"${COMMANDFILE}\" \
 		-c ${srcdir}/twhich.c
@@ -200,6 +206,20 @@ tls.o : tls.c
 		-D_RADMIND_TLS_CA=\"${TLS_CA}\" \
 		-D_RADMIND_TLS_CERT=\"${TLS_CERT}\" \
 		-c ${srcdir}/tls.c
+
+wildcard.o : wildcard.c config.h wildcard.h
+applefile.o: config.h applefile.h
+argcargv.o: config.h
+base64.o: config.h base64.h
+cksum.o: cksum.h base64.h
+code.o: config.h code.h
+connect.o: config.h
+fsdiff.o: config.h
+hardlink.o: config.h transcript.h
+ktcheck.o: config.h applefile.h base64.h cksum.h connect.h argcargv.h list.h llist.h pathcmp.h tls.h largefile.h mkdirs.h rmdirs.h report.h mkprefix.h
+lcreate.o: config.h libsnet/snet.h applefile.h /usr/include/inttypes.h radstat.h base64.h cksum.h connect.h argcargv.h code.h tls.h largefile.h progress.h
+lfdiff.o: config.h libsnet/snet.h applefile.h /usr/include/inttypes.h connect.h argcargv.h list.h pathcmp.h tls.h transcript.h code.h wildcard.h
+list.o: config.h list.h pathcmp.h
 
 radmind : libsnet/libsnet.la ${RADMIND_OBJ} Makefile
 	${CC} ${CFLAGS} -o radmind ${RADMIND_OBJ} ${LDFLAGS}
@@ -362,6 +382,14 @@ package	: all man info rash
 	${INSTALL} -m 0644 -c OS_X/background.tiff ${PKGRSRCDIR}
 	sudo chown -R root:wheel ${PKGDIR}
 	sudo chgrp admin ${PKGDIR}
+#	/usr/bin/pkgbuild \
+#	   --identifier org.radmind.tools
+#	   --version "${VERSION}"
+#	   -f ${PKGSRCDIR}/${PKGDIR} \
+#	   -r ${PKGSRCDIR}/${PKGRSRCDIR} \
+#	   -i ${PKGSRCDIR}/tmp/OS_X/Info.plist \
+#	   -d ${PKGSRCDIR}/tmp/OS_X/Description.plist \
+#	   ${PKGSRCDIR}/../${PKGNAME}.pkg
 	/Developer/Applications/Utilities/PackageMaker.app/Contents/MacOS/packagemaker \
 	   -build -p ${PKGSRCDIR}/../${PKGNAME}.pkg \
 	   -f ${PKGSRCDIR}/${PKGDIR} \

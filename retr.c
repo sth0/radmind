@@ -12,6 +12,7 @@
 #ifdef __APPLE__
 #include <sys/attr.h>
 #include <sys/paths.h>
+#include <sys/xattr.h>
 #endif /* __APPLE__ */
 #include <errno.h>
 #include <fcntl.h>
@@ -75,7 +76,7 @@ retr( SNET *sn, char *pathdesc, char *path, char *temppath, mode_t tempmode,
     ssize_t		rr;
     extern EVP_MD	*md;
     EVP_MD_CTX		mdctx;
-    unsigned char	md_value[ EVP_MAX_MD_SIZE ];
+    unsigned char	md_value[ SZ_BASE64_D( SZ_BASE64_E( EVP_MAX_MD_SIZE ) ) ];
     char		cksum_b64[ SZ_BASE64_E( EVP_MAX_MD_SIZE ) ];
 
     if ( cksum ) {
@@ -123,8 +124,18 @@ retr( SNET *sn, char *pathdesc, char *path, char *temppath, mode_t tempmode,
     }
 
     /*Create temp file name*/
+
+    /*Check for long file name*/
+    strcpy(temppath, path);
+    char strtemp[NAME_MAX];
+    int extra;
+
+    if (( strlen(temppath) - (temppath - strrchr(temppath, '/')) + 
+	  (extra = sprintf(strtemp, ".radmind.%i", (int)getpid()))) > NAME_MAX )
+      temppath[NAME_MAX - extra] ='\0'; 
+    
     if ( snprintf( temppath, MAXPATHLEN, "%s.radmind.%i",
-	    path, getpid()) >= MAXPATHLEN ) {
+	    temppath, getpid()) >= MAXPATHLEN ) {
 	fprintf( stderr, "%s.radmind.%i: too long", path,
 		(int)getpid());
 	return( -1 );
@@ -247,7 +258,7 @@ retr_applefile( SNET *sn, char *pathdesc, char *path, char *temppath,
     struct timeval		tv;
     extern EVP_MD       	*md;
     EVP_MD_CTX   	       	mdctx;
-    unsigned char       	md_value[ EVP_MAX_MD_SIZE ];
+    unsigned char       	md_value[ SZ_BASE64_D( SZ_BASE64_E( EVP_MAX_MD_SIZE ) ) ];
     char		       	cksum_b64[ SZ_BASE64_E( EVP_MAX_MD_SIZE ) ];
 
     if ( cksum ) {
@@ -320,8 +331,17 @@ retr_applefile( SNET *sn, char *pathdesc, char *path, char *temppath,
     }
 
     /* name temp file */
-    if ( snprintf( temppath, MAXPATHLEN, "%s.radmind.%i", path,
-	    getpid()) >= MAXPATHLEN ) {
+    /*Check for long file name*/
+    strcpy(temppath, path);
+    char strtemp[NAME_MAX];
+    int extra;
+
+    if (( strlen(temppath) - (temppath - strrchr(temppath, '/')) +
+          (extra = sprintf(strtemp, ".radmind.%i", (int)getpid()))) > NAME_MAX )
+      temppath[NAME_MAX - extra] ='\0';
+
+    if ( snprintf( temppath, MAXPATHLEN, "%s.radmind.%i",
+		   temppath, getpid()) >= MAXPATHLEN ) {
 	fprintf( stderr, "%s.radmind.%i: too long", path, ( int )getpid());
 	return( -1 );
     }
@@ -425,11 +445,15 @@ retr_applefile( SNET *sn, char *pathdesc, char *path, char *temppath,
 	    goto error2;
 	}
 
-	/* No need to mkprefix as dfd is already present */
+	/* No need to mkprefix as dfd is already present, need to setxattr if not present */
 	if (( rfd = open( rsrc_path, O_WRONLY, 0 )) < 0 ) {
-	    perror( rsrc_path );
-	    returnval = -1;
-	    goto error2;
+	    int tmp;
+	    if (( tmp = fsetxattr( dfd, "com.apple.ResourceFork", NULL, 0, 0, 0 )) ||
+                (( rfd = open( rsrc_path, O_WRONLY, 0 )) < 0 )) {
+	        perror( "Error creating resource or opening file" );
+	        returnval = -1;
+	        goto error2;
+	    }
 	}
 
 	for ( rsize = ae_ents[ AS_RFE ].ae_length;
@@ -524,7 +548,7 @@ retr_applefile( SNET *sn, char *pathdesc, char *path, char *temppath,
 
     if ( cksum ) {
 	EVP_DigestFinal( &mdctx, md_value, &md_len );
-	base64_e(( char*)&md_value, md_len, cksum_b64 );
+	base64_e((unsigned char*)&md_value, md_len, cksum_b64 );
         if ( strcmp( trancksum, cksum_b64 ) != 0 ) {
 	    fprintf( stderr, "line %d: checksum in transcript does not match "
 		"checksum from server\n", linenum );

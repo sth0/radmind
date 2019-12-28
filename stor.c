@@ -137,8 +137,8 @@ stor_file( SNET *sn, char *pathdesc, char *path, off_t transize,
     unsigned int	md_len;
     extern EVP_MD       *md;
     EVP_MD_CTX          mdctx;
-    unsigned char       md_value[ EVP_MAX_MD_SIZE ];
-    char       cksum_b64[ SZ_BASE64_E( EVP_MAX_MD_SIZE ) ];
+    unsigned char       md_value[ SZ_BASE64_D( SZ_BASE64_E( EVP_MAX_MD_SIZE ) ) ];
+    char                cksum_b64[ SZ_BASE64_E( EVP_MAX_MD_SIZE ) ];
 
     /* Check for checksum in transcript */
     if ( cksum ) {
@@ -263,8 +263,8 @@ stor_applefile( SNET *sn, char *pathdesc, char *path, off_t transize,
     unsigned int	rsrc_len;
     extern EVP_MD      	*md;
     EVP_MD_CTX         	mdctx;
-    unsigned char 	md_value[ EVP_MAX_MD_SIZE ];
-    char		cksum_b64[ EVP_MAX_MD_SIZE ];
+    unsigned char 	md_value[ SZ_BASE64_D( SZ_BASE64_E( EVP_MAX_MD_SIZE ) ) ];
+    char		cksum_b64[ SZ_BASE64_D( SZ_BASE64_E( EVP_MAX_MD_SIZE ) ) ];
 
     /* Check for checksum in transcript */
     if ( cksum ) {
@@ -306,9 +306,9 @@ stor_applefile( SNET *sn, char *pathdesc, char *path, off_t transize,
             return( -1 );
         }
 	if (( rfd = open( rsrc_path, O_RDONLY )) < 0 ) {
-	    perror( rsrc_path );
+            perror( rsrc_path );
 	    close( dfd );
-	    exit( 2 );
+            exit( 2 );
 	}
     }
     if ( snet_writef( sn, "%s\r\n", pathdesc ) < 0 ) {
@@ -464,7 +464,7 @@ stor_applefile( SNET *sn, char *pathdesc, char *path, off_t transize,
     /* cksum data sent */
     if ( cksum ) {
         EVP_DigestFinal( &mdctx, md_value, &md_len );
-        base64_e( ( char*)&md_value, md_len, cksum_b64 );
+        base64_e( md_value, md_len, cksum_b64 );
         if ( strcmp( trancksum, cksum_b64 ) != 0 ) {
 	    fprintf( stderr,
 		"line %d: checksum listed in transcript wrong\n", linenum );

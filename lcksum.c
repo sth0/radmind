@@ -522,6 +522,7 @@ main( int argc, char **argv )
     char		*tpath = NULL;
 
     while (( c = getopt( argc, argv, "%Aac:D:iInP:qV" )) != EOF ) {
+
 	switch( c ) {
 	case 'a':
 	    checkall = 1;

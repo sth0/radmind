@@ -21,25 +21,29 @@ pathcasecmp( const char *p1, const char *p2,
     int case_sensitive )
 {
     int		rc;
+    unsigned	char	path1[MAXPATHLEN], path2[MAXPATHLEN];
+
+    strcpy(path1, decode(p1));
+    strcpy(path2, decode(p2));
 
     do {
 	if ( case_sensitive ) {
-	    rc = ( (unsigned char)*p1 - (unsigned char)*p2 );
+	    rc = ( (unsigned char)*path1 - (unsigned char)*path2 );
 	} else {
-	    rc = ( tolower( *p1 ) - tolower( *p2 ));
+	    rc = ( tolower( *path1 ) - tolower( *path2 ));
 	}
 
 	if ( rc != 0 ) {
 	    if (( *p2 != '\0' ) && ( *p1 == '/' )) {
 		return( -1 );
-	    } else if (( *p1 != '\0' ) && ( *p2 == '/' )) {
+	    } else if (( *path1 != '\0' ) && ( *path2 == '/' )) {
 		return( 1 );
 	    } else {
 		return( rc );
 	    }
 	}
-	p2++;
-    } while ( *p1++ != '\0' );
+	path2++;
+    } while ( *path1++ != '\0' );
 
     return( 0 );
 }

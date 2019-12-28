@@ -38,6 +38,7 @@ static struct transcript	*prev_tran = NULL;
 extern int			edit_path;
 extern int			case_sensitive;
 extern int			tran_format;
+extern int			ignore_timestamps;
 static char			*kdir;
 static struct list		*kfile_list;
 struct list			*special_list;
@@ -45,6 +46,7 @@ struct list			*exclude_list;
 
 char				*path_prefix = NULL;
 int				edit_path;
+int				ignore_timestamps;
 int				skip = 0;
 int				cksum;
 int				fs_minus;
@@ -368,7 +370,7 @@ t_print( struct pathinfo *fs, struct transcript *tran, int flag )
 		sizeof( null_buf )) != 0 ) { 
 	    char	finfo_e[ SZ_BASE64_E( FINFOLEN ) ];
 
-	    base64_e( (char *)cur->pi_afinfo.ai.ai_data, FINFOLEN, finfo_e );
+	    base64_e( (unsigned char *)cur->pi_afinfo.ai.ai_data, FINFOLEN, finfo_e );
 	    fprintf( outtran, "%c %-37s\t%.4lo %5d %5d %s\n", cur->pi_type,
 		    epath,
 		    (unsigned long)( T_MODE & cur->pi_stat.st_mode ), 
@@ -545,12 +547,14 @@ t_compare( struct pathinfo *fs, struct transcript *tran )
 		    t_print( fs, tran, PR_DOWNLOAD );
 		    break;
 		}
-	    } else if ( fs->pi_stat.st_mtime != tran->t_pinfo.pi_stat.st_mtime ) {
+	    } else if ( ignore_timestamps ==0 &&
+			fs->pi_stat.st_mtime != tran->t_pinfo.pi_stat.st_mtime ) {
 		t_print( fs, tran, PR_DOWNLOAD );
 		break;
 	    }
 
-	    if ( fs->pi_stat.st_mtime != tran->t_pinfo.pi_stat.st_mtime ) {
+	    if ( ignore_timestamps == 0 &&
+		 fs->pi_stat.st_mtime != tran->t_pinfo.pi_stat.st_mtime ) {
 		t_print( fs, tran, PR_STATUS );
 		break;
 	    }

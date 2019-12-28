@@ -60,12 +60,18 @@ $ export CPPFLAGS=-I/usr/kerberos/include
 
 ### Configuring for macOS X 10.12
 
-macOS no longer includes everything needed to build radmind.  Install Xcode.  Download libsnet and place it in your radmind source directory.  The easiest way to get the other components is with [brew](https://brew.sh).
+macOS no longer includes everything needed to build radmind.  Install Xcode.  Download libsnet and place it in your radmind source directory.  The easiest way to get the other components is with [brew](https://brew.sh) or [fink](https://finkproject.org).
 
 ```
 $ brew install autoconf
 $ brew install openssl
 ```
+or
+```
+$ fink install autoconf2.6
+$ fink install openssl
+```
+
 
 From within the source directory:
 

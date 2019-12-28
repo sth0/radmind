@@ -33,6 +33,7 @@ int		dotfd;
 int		lastpercent = -1;
 int		case_sensitive = 1;
 int		tran_format = -1; 
+int		ignore_timestamps = 0;
 extern int	exclude_warnings;
 const EVP_MD    *md;
 
@@ -401,7 +402,7 @@ main( int argc, char **argv )
     cksum = 0;
     outtran = stdout;
 
-    while (( c = getopt( argc, argv, "%1ACc:IK:o:VvW" )) != EOF ) {
+    while (( c = getopt( argc, argv, "%1ACc:IK:o:tVvW" )) != EOF ) {
 	switch( c ) {
 	case '%':
 	case 'v':
@@ -455,6 +456,10 @@ main( int argc, char **argv )
 	    exclude_warnings = 1;
 	    break;
 
+	case 't':		/* ignore files for which only the time has changed */
+	    ignore_timestamps = 1;
+	break;
+
 	case '?':
 	    printf( "bad %c\n", c );
 	    errflag++;
@@ -482,7 +487,7 @@ main( int argc, char **argv )
     }
 
     if ( errflag || ( argc - optind != 1 )) {
-	fprintf( stderr, "usage: %s { -C | -A | -1 } " "[ -IVW ] ", argv[ 0 ] );
+	fprintf( stderr, "usage: %s { -C | -A | -1 } " "[ -IVWt ] ", argv[ 0 ] );
 	fprintf( stderr, "[ -K command ] " );
 	fprintf( stderr, "[ -c checksum ] [ -o file [ -%% ] ] path\n" );
 	exit ( 2 );

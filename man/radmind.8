@@ -143,7 +143,13 @@ in the config file.  Individual special files are stored in
 where
 .I <path>
 is the path of the special file as listed in the client's
-command file.
+command file.  Transcript lines are stored one per file in
+.BI special/ <host>\c
+.RI / <path>.T
+, or as a line in a file at
+.BI special/ <host>.T\c
+, or lastly as a line in the file
+.BR transcript/special.T .
 .TP 19
 .B tmp/file
 All files stored on the server using the STOR command are saved in
@@ -180,12 +186,16 @@ command file as indicated in the config file.
 .sp
 Status of a special file is determined by a single transcript line listed
 in a file named 
-special/<special-file-path>.T , where <special-file-path> is the full
+.BI special/ <special-file-path>.T\c
+, where <special-file-path> is the full
 path to the special file.  If that does not exist, a listing for the file 
+in the
+.BI special/ <host>.T
+transcript, and lastly if that does not exist, then a listing for the file
 in the
 .B transcript/special.T
 transcript in the transcript directory will be used.
-If neither of those exist, the defaults are returned.
+If none of these exist, the default permissions and ownership are returned.
 .TP 10
 RETR
 retrieve a file, transcript command or special file.  If 

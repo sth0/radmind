@@ -70,6 +70,8 @@ extern SSL_CTX  *ctx;
 
 int 		read_kfile( SNET *sn, char *kfile );
 
+char *          remove_rel( char * );
+
 int		f_quit( SNET *, int, char *[] );
 int		f_noop( SNET *, int, char *[] );
 int		f_help( SNET *, int, char *[] );
@@ -202,6 +204,17 @@ f_notls( SNET *sn, int ac, char **av )
 {
     snet_writef( sn, "%d Must issue a STARTTLS command first\r\n", 530 );
     exit( 1 );
+}
+
+    char *
+remove_rel( char * inpath )
+{
+   /*
+    * Conditionally remove . from beginning of path leave
+    * initial / for construction of path to special transcript line
+    */
+    if ( *inpath == '.' ) return ++inpath;
+    else return inpath;
 }
 
     int
@@ -546,10 +559,11 @@ special_t( char *sp_path, char *remote_path )
 		continue;
 	    }
 
-	    if ( strcmp( av[ 1 ], remote_path ) == 0 ) { 
+	    if ( strcmp( decode( remove_rel( av[ 1 ] ) ), decode ( remove_rel( remote_path ) ) ) == 0 ) { 
 		(void)fclose( fs );
 		return( av );
 	    }
+	    fprintf( stderr, "special_t: transcript line \"%s\"\n\tdoes not match special file line \"%s\"\n", av[ 1 ], remote_path );
 	}
 
 	if ( fclose( fs ) != 0 ) {
@@ -560,7 +574,7 @@ special_t( char *sp_path, char *remote_path )
     if ( fs != NULL ) {
 	(void)fclose( fs );
     }
-    
+
     return( NULL );
 }
 
@@ -637,7 +651,7 @@ f_stat( SNET *sn, int ac, char *av[] )
 	    return( 1 );
 	} 
 
-	if ( snprintf( path, MAXPATHLEN, "%s/%s", special_dir, d_path) 
+	if ( snprintf( path, MAXPATHLEN, "%s/%s", special_dir, remove_rel(d_path)) 
 		>= MAXPATHLEN ) {
 	    syslog( LOG_ERR, "f_stat: special path too long" );
 	    snet_writef( sn, "%d Path too long\r\n", 540 );

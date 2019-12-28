@@ -1,21 +1,47 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple Computer//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>Label</key>
-    <string>edu.umich.radmind</string>
-    <key>ServiceDescription</key>
-    <string>Radmind</string>
-    <key>OnDemand</key>
-    <false/>
-    <key>ProgramArguments</key>
-    <array>
-            <string>/usr/local/sbin/radmind</string>
-            <string>-f</string>
-	    <string>-u</string>
-	    <string>077</string>
-    </array>
-    <key>ServiceIPC</key>
-    <false/>
+	<key>KeepAlive</key>
+		<true/>
+	<key>Label</key>
+		<string>edu.umich.radmind</string>
+	<key>Program</key>
+		<string>/usr/local/sbin/radmind</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>radmind</string>
+		<string>-f</string>
+		<string>-B</string>
+		<string>-u</string>
+		<string>027</string>
+		<string>-Z</string>
+		<string>2</string>
+		<string>-L</string>
+		<string>Info</string>
+	</array>
+	<key>RunAtLoad</key>
+		<true/>
+	<key>SoftResourceLimits</key>
+	<dict>
+		<key>NumberOfFiles</key>
+		<integer>4096</integer>
+	</dict>
+	<key>Sockets</key>
+	<dict>
+		<key>Listeners</key>
+		<dict>
+			<key>SockServiceName</key>
+			<string>radmind</string>
+                        <key>SockType</key>
+                        <string>dgram</string>
+			<key>SockFamily</key>
+			<string>IPv4</string>
+                        <key>Bonjour</key>
+                        <true/>
+			<key>SockProtocol</key>
+			<string>TCP</string>
+		</dict>
+	</dict>
 </dict>
 </plist>
